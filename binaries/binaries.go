@@ -43,9 +43,9 @@ var Engines = []Engine{{
 }, {
 	"introspection-engine",
 	"PRISMA_INTROSPECTION_ENGINE_BINARY",
-}, {
-	"prisma-fmt",
-	"PRISMA_FMT_BINARY",
+// }, {
+//	 "prisma-fmt",
+// 	 "PRISMA_FMT_BINARY",
 }}
 
 // init overrides URLs if env variables are specific for debugging purposes and to
@@ -132,9 +132,9 @@ func FetchNative(toDir string) error {
 		return fmt.Errorf("toDir must be absolute")
 	}
 
-	if err := DownloadCLI(toDir); err != nil {
-		return fmt.Errorf("could not download engines: %w", err)
-	}
+	// if err := DownloadCLI(toDir); err != nil {
+	// 	return fmt.Errorf("could not download engines: %w", err)
+	// }
 
 	for _, e := range Engines {
 		if _, err := DownloadEngine(e.Name, toDir); err != nil {
