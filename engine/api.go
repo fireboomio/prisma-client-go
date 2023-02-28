@@ -3,6 +3,12 @@ package engine
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/joho/godotenv"
 	"github.com/prisma/prisma-client-go/binaries"
 	"github.com/prisma/prisma-client-go/binaries/platform"
@@ -10,24 +16,19 @@ import (
 	"github.com/prisma/prisma-client-go/engine/migrate"
 	"github.com/prisma/prisma-client-go/generator/ast/dmmf"
 	"github.com/prisma/prisma-client-go/logger"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
-func NewDMFQueryEngine(schema string) (*QueryEngine, error) {
+func NewDMFQueryEngine(schema string) (*QueryEngine, string, error) {
 	content, err := Pull(schema)
 	if err != nil {
-		return nil, err
+		return nil, content, err
 	}
 	queryEngine := NewQueryEngine(content, false)
 	if err := queryEngine.ConnectSDK(); err != nil {
-		logger.Debug.Printf("connect fail err : ", err)
-		return nil, err
+		logger.Debug.Println("connect fail err : ", err)
+		return nil, content, err
 	}
-	return queryEngine, nil
+	return queryEngine, content, nil
 }
 
 var globalQueryEngine *QueryEngine
@@ -36,11 +37,11 @@ func GetQueryEngineOnce(schema string) *QueryEngine {
 	if globalQueryEngine == nil {
 		content, err := Pull(schema)
 		if err != nil {
-			logger.Debug.Printf("connect fail err : ", err)
+			logger.Debug.Println("connect fail err : ", err)
 		}
 		globalQueryEngine = NewQueryEngine(content, false)
 		if err := globalQueryEngine.ConnectSDK(); err != nil {
-			logger.Debug.Printf("connect fail err : ", err)
+			logger.Debug.Println("connect fail err : ", err)
 		}
 	}
 	return globalQueryEngine
@@ -55,36 +56,36 @@ func ReloadQueryEngineOnce(schema string) (*QueryEngine, error) {
 	// 内省
 	content, err := Pull(schema)
 	if err != nil {
-		logger.Debug.Printf("connect fail err : ", err)
+		logger.Debug.Println("connect fail err : ", err)
 		return nil, err
 	}
 
 	globalQueryEngine = NewQueryEngine(content, false)
 	if err := globalQueryEngine.ConnectSDK(); err != nil {
-		logger.Debug.Printf("connect fail err : ", err)
+		logger.Debug.Println("connect fail err : ", err)
 	}
 	return globalQueryEngine, nil
 }
 
 func Push(schemaPath string) error {
-	migrationEngine := migrate.NewMigrationEngine()
-	return migrationEngine.Push(schemaPath)
+	engine := migrate.NewMigrationEngine()
+	return engine.Push(schemaPath)
 }
 
 func Pull(schema string) (string, error) {
-	migrationEngine := introspection.NewIntrospectEngine()
-	return migrationEngine.Pull(schema)
+	engine := introspection.NewIntrospectEngine()
+	return engine.Pull(schema)
 }
 
 func InitQueryEngine(schema string) error {
 	content, err := Pull(schema)
 	if err != nil {
-		logger.Debug.Printf("connect fail err : ", err)
+		logger.Debug.Println("connect fail err : ", err)
 		return err
 	}
 	globalQueryEngine = NewQueryEngine(content, false)
 	if err := globalQueryEngine.ConnectSDK(); err != nil {
-		logger.Debug.Printf("connect fail err : ", err)
+		logger.Debug.Println("connect fail err : ", err)
 		return err
 	}
 	return nil

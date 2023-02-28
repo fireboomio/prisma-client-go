@@ -1,10 +1,10 @@
 package introspection
 
 import (
+	"bufio"
+	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/prisma/prisma-client-go/binaries"
-	"github.com/prisma/prisma-client-go/binaries/platform"
-	"github.com/prisma/prisma-client-go/logger"
 	"io"
 	"log"
 	"os"
@@ -12,12 +12,10 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-)
 
-import (
-	"bufio"
-	"context"
-	"encoding/json"
+	"github.com/prisma/prisma-client-go/binaries"
+	"github.com/prisma/prisma-client-go/binaries/platform"
+	"github.com/prisma/prisma-client-go/logger"
 )
 
 func InitEngine() {
@@ -25,10 +23,7 @@ func InitEngine() {
 }
 
 func NewIntrospectEngine() *IntrospectEngine {
-	// TODO:这里可以设置默认值
-	engine := &IntrospectEngine{
-		// path: path,
-	}
+	engine := &IntrospectEngine{}
 	file, err := engine.ensure() //确保引擎一定安装了
 	if err != nil {
 		panic(err)

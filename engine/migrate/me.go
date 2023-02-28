@@ -19,10 +19,7 @@ import (
 )
 
 func NewMigrationEngine() *MigrationEngine {
-	// TODO:这里可以设置默认值
-	engine := &MigrationEngine{
-		// path: path,
-	}
+	engine := &MigrationEngine{}
 	file, err := engine.ensure() //确保引擎一定安装了
 	if err != nil {
 		panic(err)
