@@ -227,10 +227,12 @@ type Model struct {
 	Name       types.String `json:"name"`
 	IsEmbedded bool         `json:"isEmbedded"`
 	// DBName (optional)
-	DBName        types.String  `json:"dbName"`
-	Fields        []Field       `json:"fields"`
-	UniqueIndexes []UniqueIndex `json:"uniqueIndexes"`
-	PrimaryKey    PrimaryKey    `json:"primaryKey"`
+	DBName        types.String     `json:"dbName"`
+	Fields        []Field          `json:"fields"`
+	UniqueFields  [][]types.String `json:"uniqueFields"`
+	UniqueIndexes []UniqueIndex    `json:"uniqueIndexes"`
+	PrimaryKey    PrimaryKey       `json:"primaryKey"`
+	Documentation types.String     `json:"documentation"`
 }
 
 type PrimaryKey struct {
