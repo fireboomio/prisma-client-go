@@ -213,6 +213,7 @@ type EnumValue struct {
 type Datamodel struct {
 	Models []Model `json:"models"`
 	Enums  []Enum  `json:"enums"`
+	Types  []Model `json:"types"`
 }
 
 type UniqueIndex struct {
@@ -255,26 +256,30 @@ func (m Model) RelationFieldsPlusOne() []Field {
 
 // Field describes properties of a single model field.
 type Field struct {
-	Kind       FieldKind    `json:"kind"`
-	Name       types.String `json:"name"`
-	IsRequired bool         `json:"isRequired"`
-	IsList     bool         `json:"isList"`
-	IsUnique   bool         `json:"isUnique"`
-	IsReadOnly bool         `json:"isReadOnly"`
-	IsID       bool         `json:"isId"`
-	Type       types.Type   `json:"type"`
-	// DBName (optional)
-	DBName      types.String `json:"dBName"`
+	Kind        FieldKind    `json:"kind"`
+	Name        types.String `json:"name"`
+	IsRequired  bool         `json:"isRequired"`
+	IsList      bool         `json:"isList"`
+	IsUnique    bool         `json:"isUnique"`
+	IsID        bool         `json:"isId"`
+	IsReadOnly  bool         `json:"isReadOnly"`
 	IsGenerated bool         `json:"isGenerated"`
 	IsUpdatedAt bool         `json:"isUpdatedAt"`
+	Type        types.Type   `json:"type"`
+	// DBName (optional)
+	DBNames []types.String `json:"dBNames"`
+	// HasDefaultValue
+	HasDefaultValue bool        `json:"hasDefaultValue"`
+	Default         interface{} `json:"default"`
+	// RelationFromFields (optional)
+	RelationFromFields []interface{} `json:"relationFromFields"`
 	// RelationToFields (optional)
 	RelationToFields []interface{} `json:"relationToFields"`
 	// RelationOnDelete (optional)
 	RelationOnDelete types.String `json:"relationOnDelete"`
 	// RelationName (optional)
-	RelationName types.String `json:"relationName"`
-	// HasDefaultValue
-	HasDefaultValue bool `json:"hasDefaultValue"`
+	RelationName  types.String `json:"relationName"`
+	Documentation types.String `json:"documentation"`
 }
 
 func (f Field) RequiredOnCreate() bool {
