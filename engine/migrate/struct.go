@@ -19,7 +19,8 @@ type MigrationResponse struct {
 }
 
 type MigrationResponseResult struct {
-	ExecutedSteps int `json:"executedSteps"`
+	ExecutedSteps int      `json:"executedSteps"`
+	Unexecutable  []string `json:"unexecutable"`
 }
 
 type MigrationResponseError struct {

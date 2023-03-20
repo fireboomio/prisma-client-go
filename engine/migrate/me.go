@@ -164,11 +164,11 @@ func (e *MigrationEngine) Push(schemaPath string) error {
 		//time.Sleep(time.Millisecond * 100)
 		b, err := r.ReadByte()
 		if err != nil {
-			err = fmt.Errorf("migration ReadByte: %s", err.Error())
+			return fmt.Errorf("migration ReadByte: %s", err.Error())
 		}
 		err = outBuf.WriteByte(b)
 		if err != nil {
-			err = fmt.Errorf("migration writeByte: %s", err.Error())
+			return fmt.Errorf("migration writeByte: %s", err.Error())
 		}
 
 		if b == '\n' {
@@ -176,6 +176,9 @@ func (e *MigrationEngine) Push(schemaPath string) error {
 			err = json.Unmarshal(outBuf.Bytes(), &response)
 			if err != nil {
 				return err
+			}
+			if len(response.Result.Unexecutable) > 0 {
+				return fmt.Errorf("migration Unexecutable: %v", response.Result.Unexecutable)
 			}
 			if response.Error == nil {
 				log.Println("Migration successful")
