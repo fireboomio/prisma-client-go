@@ -177,7 +177,7 @@ func (e *MigrationEngine) Push(schemaPath string) error {
 			if err != nil {
 				return err
 			}
-			if len(response.Result.Unexecutable) > 0 {
+			if response.Result != nil && len(response.Result.Unexecutable) > 0 {
 				return fmt.Errorf("migration Unexecutable: %v", response.Result.Unexecutable)
 			}
 			if response.Error == nil {
