@@ -15,19 +15,26 @@ import (
 )
 
 // PrismaVersion is a hardcoded version of the Prisma CLI.
-//const PrismaVersion = "3.13.0"
+// const PrismaVersion = "3.13.0"
 var PrismaVersion = "3.13.0"
 
 // EngineVersion is a hardcoded version of the Prisma Engine.
 // The versions can be found under https://github.com/prisma/prisma-engines/commits/master
-//const EngineVersion = "694eea289a8462c80264df36757e4fdc129b1b32"
-var EngineVersion = "694eea289a8462c80264df36757e4fdc129b1b32"
+// const EngineVersion = "694eea289a8462c80264df36757e4fdc129b1b32"
+var QueryEngineVersion = "694eea289a8462c80264df36757e4fdc129b1b32"  // 用于指定 query-engine 的版本
+var SchemaEngineVersion = "3fbc639084c1d040e6e0191bc226e8cdfe421e15" // 用于指定 schema-engine 的版本
 
 // PrismaURL points to an S3 bucket URL where the CLI binaries are stored.
 var PrismaURL = "https://prisma-photongo.s3-eu-west-1.amazonaws.com/%s-%s-%s-x64.gz"
 
 // EngineURL points to an S3 bucket URL where the Prisma engines are stored.
-var EngineURL = "https://binaries.prisma.sh/all_commits/%s/%s/%s.gz"
+var queryEngineURL = "https://binaries.prisma.sh/all_commits/%s/%s/%s.gz" // queryEngine 下载链接; https://github.com/steebchen/prisma-client-go/issues/1107
+var scehmaEngineURL = "https://abc.comh/all_commits/%s/%s/%s.gz"          // TODO 添加自定义下载链接
+
+const (
+	QueryEngineName  = "query-engine"
+	SchemaEngineName = "schema-engine"
+)
 
 type Engine struct {
 	Name string
@@ -35,17 +42,11 @@ type Engine struct {
 }
 
 var Engines = []Engine{{
-	"query-engine",
+	QueryEngineName,
 	"PRISMA_QUERY_ENGINE_BINARY",
 }, {
-	"migration-engine",
-	"PRISMA_MIGRATION_ENGINE_BINARY",
-}, {
-	"introspection-engine",
+	SchemaEngineName,
 	"PRISMA_INTROSPECTION_ENGINE_BINARY",
-// }, {
-//	 "prisma-fmt",
-// 	 "PRISMA_FMT_BINARY",
 }}
 
 // init overrides URLs if env variables are specific for debugging purposes and to
@@ -55,7 +56,19 @@ func init() {
 		PrismaURL = prismaURL
 	}
 	if engineURL, ok := os.LookupEnv("PRISMA_ENGINE_URL"); ok {
-		EngineURL = engineURL
+		queryEngineURL = engineURL
+	}
+}
+
+func getDownLoadUrl(engineName, binaryName string) string {
+	switch engineName {
+	case SchemaEngineName:
+		return fmt.Sprintf(scehmaEngineURL, SchemaEngineVersion, binaryName, engineName)
+	case QueryEngineName:
+		return fmt.Sprintf(queryEngineURL, QueryEngineVersion, binaryName, engineName)
+	default:
+		logger.Info.Printf("can not get download url with engineName = %s", engineName)
+		return ""
 	}
 }
 
@@ -96,13 +109,12 @@ func GlobalCacheDir() string {
 func FetchEngine(toDir string, engineName string, binaryPlatformName string) error {
 	logger.Debug.Printf("checking %s...", engineName)
 
-	to := platform.CheckForExtension(binaryPlatformName, filepath.ToSlash(filepath.Join(toDir, EngineVersion, fmt.Sprintf("prisma-%s-%s", engineName, binaryPlatformName))))
-
+	to := GetEnginePath(toDir, engineName, binaryPlatformName)
 	binaryPlatformRemoteName := binaryPlatformName
 	if binaryPlatformRemoteName == "linux" {
 		binaryPlatformRemoteName = "linux-musl"
 	}
-	url := platform.CheckForExtension(binaryPlatformName, fmt.Sprintf(EngineURL, EngineVersion, binaryPlatformRemoteName, engineName))
+	url := platform.CheckForExtension(binaryPlatformName, getDownLoadUrl(engineName, binaryPlatformRemoteName))
 
 	logger.Debug.Printf("download url %s", url)
 
@@ -167,8 +179,16 @@ func DownloadCLI(toDir string) error {
 	return nil
 }
 
-func GetEnginePath(dir, engine, binaryName string) string {
-	return platform.CheckForExtension(binaryName, filepath.ToSlash(filepath.Join(dir, EngineVersion, fmt.Sprintf("prisma-%s-%s", engine, binaryName))))
+func GetEnginePath(dir, engine, binaryName string) string { //本地存储地址
+	switch engine {
+	case SchemaEngineName:
+		return platform.CheckForExtension(binaryName, filepath.ToSlash(filepath.Join(dir, SchemaEngineVersion, fmt.Sprintf("prisma-%s-%s", engine, binaryName))))
+	case QueryEngineName:
+		return platform.CheckForExtension(binaryName, filepath.ToSlash(filepath.Join(dir, QueryEngineVersion, fmt.Sprintf("prisma-%s-%s", engine, binaryName))))
+	default:
+		logger.Info.Printf("can not get local path with engineName = %s", engine)
+		return ""
+	}
 }
 
 func DownloadEngine(name string, toDir string) (file string, err error) {
@@ -176,9 +196,9 @@ func DownloadEngine(name string, toDir string) (file string, err error) {
 
 	logger.Debug.Printf("checking %s...", name)
 
-	to := platform.CheckForExtension(binaryName, filepath.ToSlash(filepath.Join(toDir, EngineVersion, fmt.Sprintf("prisma-%s-%s", name, binaryName))))
+	to := GetEnginePath(toDir, name, binaryName)
 
-	url := platform.CheckForExtension(binaryName, fmt.Sprintf(EngineURL, EngineVersion, binaryName, name))
+	url := platform.CheckForExtension(binaryName, getDownLoadUrl(name, binaryName))
 
 	logger.Debug.Printf("download url %s", url)
 

@@ -131,7 +131,7 @@ func (e *QueryEngine) ensureSDK() (string, error) {
 	if err := binaries.FetchNative(dir); err != nil {
 		return "", fmt.Errorf("could not fetch binaries: %w", err)
 	}
-	binariesPath := filepath.ToSlash(filepath.Join(dir, binaries.EngineVersion))
+	binariesPath := filepath.ToSlash(filepath.Join(dir, binaries.QueryEngineVersion))
 	//binaryName := platform.CheckForExtension(platform.Name(), platform.Name())
 	binaryName := platform.BinaryPlatformName()
 
@@ -192,9 +192,9 @@ func (e *QueryEngine) ensureSDK() (string, error) {
 	}
 	logger.Debug.Printf("version check took %s", time.Since(startVersion))
 
-	if v := strings.TrimSpace(strings.Replace(string(out), "query-engine", "", 1)); binaries.EngineVersion != v {
+	if v := strings.TrimSpace(strings.Replace(string(out), "query-engine", "", 1)); binaries.QueryEngineVersion != v {
 		note := "Did you forget to run `go run github.com/prisma/prisma-client-go generate`?"
-		msg := fmt.Errorf("expected query engine version `%s` but got `%s`\n%s", binaries.EngineVersion, v, note)
+		msg := fmt.Errorf("expected query engine version `%s` but got `%s`\n%s", binaries.QueryEngineVersion, v, note)
 		if forceVersion {
 			return "", msg
 		}
