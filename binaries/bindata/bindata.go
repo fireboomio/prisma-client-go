@@ -62,7 +62,7 @@ import (
 func init() {
 	unpack.Unpack(data, "%s", "%s")
 }
-`, name, constraints, pkg, name, binaries.EngineVersion)
+`, name, constraints, pkg, name, binaries.QueryEngineVersion)
 	return err
 }
 
