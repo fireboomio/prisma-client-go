@@ -22,14 +22,14 @@ var PrismaVersion = "3.13.0"
 // The versions can be found under https://github.com/prisma/prisma-engines/commits/master
 // const EngineVersion = "694eea289a8462c80264df36757e4fdc129b1b32"
 var QueryEngineVersion = "694eea289a8462c80264df36757e4fdc129b1b32"  // 用于指定 query-engine 的版本
-var SchemaEngineVersion = "981b59d7796d8f5c01562e413211b1c86bfe1ae6" // 用于指定 schema-engine 的版本
+var SchemaEngineVersion = "b3dba99ab5820f4e6b67e9220b80c89b71c2b5e6" // 用于指定 schema-engine 的版本
 
 // PrismaURL points to an S3 bucket URL where the CLI binaries are stored.
 var PrismaURL = "https://prisma-photongo.s3-eu-west-1.amazonaws.com/%s-%s-%s-x64.gz"
 
 // EngineURL points to an S3 bucket URL where the Prisma engines are stored.
-var queryEngineURL = "https://binaries.prisma.sh/all_commits/%s/%s/%s.gz"                 // queryEngine 下载链接; https://github.com/steebchen/prisma-client-go/issues/1107
-var scehmaEngineURL = "https://prisma-bin.oss-cn-shanghai.aliyuncs.com/0.1.0/%s/%s/%s.gz" // TODO 添加自定义下载链接
+var queryEngineURL = "https://binaries.prisma.sh/all_commits/%s/%s/%s.gz" // queryEngine 下载链接; https://github.com/steebchen/prisma-client-go/issues/1107
+var scehmaEngineURL = "https://prisma-bin.fireboom.io/%s/%s/%s.gz"
 
 const (
 	QueryEngineName  = "query-engine"
@@ -183,6 +183,18 @@ func GetEnginePath(dir, engine, binaryName string) string { //本地存储地址
 	switch engine {
 	case SchemaEngineName:
 		return platform.CheckForExtension(binaryName, filepath.ToSlash(filepath.Join(dir, SchemaEngineVersion, fmt.Sprintf("prisma-%s-%s", engine, binaryName))))
+	case QueryEngineName:
+		return platform.CheckForExtension(binaryName, filepath.ToSlash(filepath.Join(dir, QueryEngineVersion, fmt.Sprintf("prisma-%s-%s", engine, binaryName))))
+	default:
+		logger.Info.Printf("can not get local path with engineName = %s", engine)
+		return ""
+	}
+}
+
+func GetEnginePathWithVersion(dir, engine, binaryName, scehemaEngineVersion string) string { //本地存储地址
+	switch engine {
+	case SchemaEngineName:
+		return platform.CheckForExtension(binaryName, filepath.ToSlash(filepath.Join(dir, scehemaEngineVersion, fmt.Sprintf("prisma-%s-%s", engine, binaryName))))
 	case QueryEngineName:
 		return platform.CheckForExtension(binaryName, filepath.ToSlash(filepath.Join(dir, QueryEngineVersion, fmt.Sprintf("prisma-%s-%s", engine, binaryName))))
 	default:
