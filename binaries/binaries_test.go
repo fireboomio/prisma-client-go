@@ -68,3 +68,9 @@ func TestFetch_relativeDir(t *testing.T) {
 	expected := fmt.Errorf("toDir must be absolute")
 	assert.Equal(t, expected, actual)
 }
+
+func TestDownloadURL(t *testing.T) {
+	assert.Equal(t, "https://binaries.prisma.sh/all_commits/694eea289a8462c80264df36757e4fdc129b1b32/linux-musl/query-engine.gz", getDownLoadUrl("query-engine", "debian-openssl-3.2.x"))
+	assert.Equal(t, "https://prisma-bin.fireboom.io/b3dba99ab5820f4e6b67e9220b80c89b71c2b5e6/linux-static-x64/schema-engine.gz", getDownLoadUrl("schema-engine", "debian-openssl-3.2.x"))
+
+}
