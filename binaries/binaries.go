@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/prisma/prisma-client-go/binaries/platform"
@@ -60,7 +61,19 @@ func init() {
 	}
 }
 
-func getDownLoadUrl(engineName, binaryName string) string {
+func getDownLoadUrl(engineName, binaryName string) (res string) {
+	if strings.Contains(binaryName, "debian-openssl-") { // TODO 先临时处理下，后续迁移 schema-engine 后统一处理
+		switch engineName {
+		case SchemaEngineName:
+			return fmt.Sprintf(scehmaEngineURL, SchemaEngineVersion, "linux-static-x64", engineName)
+		case QueryEngineName:
+			return fmt.Sprintf(queryEngineURL, QueryEngineVersion, "linux-musl", engineName)
+		default:
+			logger.Info.Printf("can not get download url with engineName = %s", engineName)
+			return ""
+		}
+	}
+
 	switch engineName {
 	case SchemaEngineName:
 		return fmt.Sprintf(scehmaEngineURL, SchemaEngineVersion, binaryName, engineName)
