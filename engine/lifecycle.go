@@ -6,13 +6,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
 
-	"github.com/prisma/prisma-client-go/binaries"
 	"github.com/prisma/prisma-client-go/binaries/platform"
 	"github.com/prisma/prisma-client-go/logger"
 )
@@ -67,84 +64,18 @@ func (e *QueryEngine) Disconnect() error {
 }
 
 func (e *QueryEngine) ensure() (string, error) {
-	ensureEngine := time.Now()
 
-	binariesPath := binaries.GlobalUnpackDir(binaries.QueryEngineVersion)
-	// check for darwin/windows/linux first
-	binaryName := platform.CheckForExtension(platform.Name(), platform.Name())
-	exactBinaryName := platform.CheckForExtension(platform.Name(), platform.BinaryPlatformName())
-
-	var file string
-	// forceVersion saves whether a version check should be done, which should be disabled
-	// when providing a custom query engine value
-	forceVersion := true
-
-	name := "prisma-query-engine-"
-	localPath := filepath.ToSlash(filepath.Join("./", name+binaryName))
-	localExactPath := filepath.ToSlash(filepath.Join("./", name+exactBinaryName))
-	globalPath := filepath.ToSlash(filepath.Join(binariesPath, name+binaryName))
-	globalExactPath := filepath.ToSlash(filepath.Join(binariesPath, name+exactBinaryName))
-
-	logger.Debug.Printf("expecting local query engine `%s` or `%s`", localPath, localExactPath)
-	logger.Debug.Printf("expecting global query engine `%s` or `%s`", globalPath, globalExactPath)
-
-	// TODO write tests for all cases
-
-	// first, check if the query engine binary is being overridden by PRISMA_QUERY_ENGINE_BINARY
+	// fireboom 直接从环境变量读
 	prismaQueryEngineBinary := os.Getenv("PRISMA_QUERY_ENGINE_BINARY")
-	if prismaQueryEngineBinary != "" {
-		logger.Debug.Printf("PRISMA_QUERY_ENGINE_BINARY is defined, using %s", prismaQueryEngineBinary)
-
-		if _, err := os.Stat(prismaQueryEngineBinary); err != nil {
-			return "", fmt.Errorf("PRISMA_QUERY_ENGINE_BINARY was provided, but no query engine was found at %s", prismaQueryEngineBinary)
-		}
-
-		file = prismaQueryEngineBinary
-		forceVersion = false
-	} else {
-		if _, err := os.Stat(localExactPath); err == nil {
-			logger.Debug.Printf("exact query engine found in working directory")
-			file = localExactPath
-		} else if _, err := os.Stat(localPath); err == nil {
-			logger.Debug.Printf("query engine found in working directory")
-			file = localPath
-		}
-
-		if _, err := os.Stat(globalExactPath); err == nil {
-			logger.Debug.Printf("query engine found in global path")
-			file = globalExactPath
-		} else if _, err := os.Stat(globalPath); err == nil {
-			logger.Debug.Printf("exact query engine found in global path")
-			file = globalPath
-		}
+	if prismaQueryEngineBinary == "" {
+		return "", fmt.Errorf("should set env var PRISMA_QUERY_ENGINE_BINARY ")
 	}
 
-	if file == "" {
-		// TODO log instructions on how to fix this problem
-		return "", fmt.Errorf("no binary found ")
+	if _, err := os.Stat(prismaQueryEngineBinary); err != nil {
+		return "", fmt.Errorf("PRISMA_QUERY_ENGINE_BINARY was provided, but no query engine was found at %s", prismaQueryEngineBinary)
 	}
 
-	startVersion := time.Now()
-	out, err := exec.Command(file, "--version").Output()
-	if err != nil {
-		return "", fmt.Errorf("version check failed: %w", err)
-	}
-	logger.Debug.Printf("version check took %s", time.Since(startVersion))
-
-	if v := strings.TrimSpace(strings.Replace(string(out), "query-engine", "", 1)); binaries.QueryEngineVersion != v {
-		note := "Did you forget to run `go run github.com/prisma/prisma-client-go generate`?"
-		msg := fmt.Errorf("expected query engine version `%s` but got `%s`\n%s", binaries.QueryEngineVersion, v, note)
-		if forceVersion {
-			return "", msg
-		}
-
-		logger.Info.Printf("%s, ignoring since custom query engine was provided", msg)
-	}
-
-	logger.Debug.Printf("using query engine at %s", file)
-	logger.Debug.Printf("ensure query engine took %s", time.Since(ensureEngine))
-
-	return file, nil
+	return prismaQueryEngineBinary, nil
 }
 
 func (e *QueryEngine) spawn(file string) error {
@@ -196,7 +127,7 @@ func (e *QueryEngine) spawn(file string) error {
 		body, err := e.Request(ctx, "GET", "/status", map[string]interface{}{})
 		if err != nil {
 			connectErr = err
-			logger.Debug.Printf("could not connect; retrying...")
+			logger.Debug.Printf("could not connect; retrying... {}", err)
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
