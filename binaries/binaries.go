@@ -308,3 +308,88 @@ func copyFile(from string, to string) error {
 
 	return nil
 }
+
+// ----------------------- 自定义 fireboom 下载逻辑 -------------
+var engineNames = []string{QueryEngineName, SchemaEngineName}
+
+const downloadURL = "https://prisma-bin.fireboom.io/%s/%s.gz"
+
+type FetchNativeRes struct {
+	SchemaEnginePath string
+	QueryEnginePath  string
+}
+
+func (f *FetchNativeRes) setPath(engineName, enginePath string) {
+	switch engineName {
+	case QueryEngineName:
+		f.QueryEnginePath = enginePath
+	case SchemaEngineName:
+		f.SchemaEnginePath = enginePath
+	}
+}
+
+// FetchNativeWithVersion 用于 fireboom 下载指定版本的 Prisma Binaries
+func FetchNativeWithVersion(toDir, version string) (FetchNativeRes, error) {
+	res := FetchNativeRes{}
+	if toDir == "" {
+		return res, fmt.Errorf("toDir must be provided")
+	}
+	if !filepath.IsAbs(toDir) {
+		return res, fmt.Errorf("toDir must be absolute")
+	}
+
+	for _, engineName := range engineNames {
+		enginePath, err := downloadEngine(toDir, version, engineName)
+		if err != nil {
+			return res, fmt.Errorf("could not download engines: %w", err)
+		}
+
+		res.setPath(engineName, enginePath)
+	}
+
+	return res, nil
+}
+
+func downloadEngine(toDir, version, engineName string) (file string, err error) {
+	binaryName := binaryName(engineName)
+	to := getEnginePath(toDir, version, binaryName)
+	url := downLoadUrl(version, binaryName)
+	logger.Debug.Printf("downloading %s to %s", url, to)
+
+	if _, err := os.Stat(to); !os.IsNotExist(err) {
+		logger.Debug.Printf("%s is cached", to)
+		return to, nil
+	}
+
+	logger.Debug.Printf("%s is missing, downloading...", binaryName)
+	startDownload := time.Now()
+	if err := download(url, to); err != nil {
+		return "", fmt.Errorf("could not download %s to %s: %w", url, to, err)
+	}
+
+	logger.Debug.Printf("download() took %s", time.Since(startDownload))
+
+	logger.Debug.Printf("%s done", binaryName)
+
+	return to, nil
+}
+
+func getEnginePath(dir, version, binaryName string) string { //本地存储地址
+	return filepath.ToSlash(filepath.Join(dir, version, binaryName))
+}
+
+// binaryName 二进制文件名
+func binaryName(engineName string) string {
+
+	platform, arch := platform.Name(), platform.Arch()
+	res := fmt.Sprintf("%s-%s-%s", platform, arch, engineName)
+	if platform == "windows" {
+		return fmt.Sprintf("%s.exe", res)
+	}
+
+	return res
+}
+
+func downLoadUrl(version, binaryName string) (res string) {
+	return fmt.Sprintf(downloadURL, version, binaryName)
+}
