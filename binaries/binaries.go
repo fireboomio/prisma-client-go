@@ -22,7 +22,7 @@ var PrismaVersion = "3.13.0"
 // EngineVersion is a hardcoded version of the Prisma Engine.
 // The versions can be found under https://github.com/prisma/prisma-engines/commits/master
 // const EngineVersion = "694eea289a8462c80264df36757e4fdc129b1b32"
-var QueryEngineVersion = "694eea289a8462c80264df36757e4fdc129b1b32"  // 用于指定 query-engine 的版本
+var QueryEngineVersion = "58b76d24c10d06ee3aba2c8f1e5cbe75db073d3c"  // 用于指定 query-engine 的版本
 var SchemaEngineVersion = "b3dba99ab5820f4e6b67e9220b80c89b71c2b5e6" // 用于指定 schema-engine 的版本
 
 // PrismaURL points to an S3 bucket URL where the CLI binaries are stored.
