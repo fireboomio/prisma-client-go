@@ -31,6 +31,8 @@ type QueryEngine struct {
 	hasBinaryTargets bool
 
 	disconnected bool
+
+	RewriteErrorsFunc func([]byte) ([]byte, bool)
 }
 
 func (e *QueryEngine) Name() string {

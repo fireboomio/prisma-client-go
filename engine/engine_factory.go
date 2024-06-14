@@ -228,6 +228,12 @@ func (e *QueryEngine) DoQuery(ctx context.Context, payload GQLRequest, v interfa
 
 	logger.Debug.Printf("[timing] query engine request took %s", time.Since(startReq))
 
+	if e.RewriteErrorsFunc != nil {
+		if rewrittenBytes, rewritten := e.RewriteErrorsFunc(body); rewritten {
+			body = rewrittenBytes
+		}
+	}
+
 	if err := json.Unmarshal(body, v); err != nil {
 		return fmt.Errorf("json unmarshal: %w", err)
 	}
@@ -267,6 +273,12 @@ func (e *QueryEngine) BatchReq(ctx context.Context, payload interface{}, v inter
 	body, err := e.Request(ctx, "POST", "/", payload)
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
+	}
+
+	if e.RewriteErrorsFunc != nil {
+		if rewrittenBytes, rewritten := e.RewriteErrorsFunc(body); rewritten {
+			body = rewrittenBytes
+		}
 	}
 
 	if err := json.Unmarshal(body, &v); err != nil {
